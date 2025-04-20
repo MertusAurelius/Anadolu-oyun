@@ -1,10 +1,30 @@
-
 <!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
   <title>Anadolu Uygarlıkları Oyunu</title>
   <style>
+    body {
+      background: #f5f5dc;
+      font-family: sans-serif;
+      text-align: center;
+    }
+    button {
+      font-size: 18px;
+      padding: 10px 20px;
+      margin: 10px;
+    }
+    #mapArea {
+      position: relative;
+      height: 600px;
+      margin: 20px auto;
+      width: 90%;
+      border: 2px solid #444;
+      background-image: url('1c565dc4-f581-4206-ae3b-7c5d46fc5b7f.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
     .player-token {
       position: absolute;
       width: 30px;
@@ -15,41 +35,99 @@
       line-height: 30px;
       font-weight: bold;
       color: white;
+      transform: translate(-50%, -50%);
+    }
+    .civilization-label {
+      position: absolute;
+      background-color: rgba(255,255,255,0.8);
+      padding: 4px 6px;
+      border: 1px solid #333;
+      border-radius: 5px;
+      font-size: 12px;
+      z-index: 1;
+      transform: translate(-50%, -50%);
     }
   </style>
 </head>
 <body>
-  <div id="mapArea" style="position: relative; height: 500px; background: #eef;">
-    <div class="player-token" id="playerToken" style="top: 80%; left: 5%;">1</div>
-  </div>
 
-  <script>
-    let step = 5;
-    let lastDice = 3;  // örnek zar sonucu
-    let playerX = 5; // % sol
-    let playerY = 80; // % üst
+<h1>Anadolu Uygarlıkları Oyunu</h1>
+<p>Eğitici Tur Bazlı Web Oyunu</p>
+<label>Oyuncu Sayısı: <input type="number" id="playerCount" min="2" max="4" value="2"></label><br>
+<button onclick="startGame()">Oyuna Başla</button>
+<button onclick="rollDice()">🎲 Zar At</button>
+<button onclick="movePlayer()">🧭 Hareket Et</button>
+<div id="diceResult"></div>
+<div id="mapArea">
+  <div class="player-token" id="playerToken" style="top: 80%; left: 5%;">1</div>
+</div>
 
-    function movePlayer() {
-      const direction = Math.floor(Math.random() * 4); // 0: sağ, 1: sol, 2: yukarı, 3: aşağı
-      const movement = step * lastDice;
-      if (direction === 0) playerX += movement;
-      if (direction === 1) playerX -= movement;
-      if (direction === 2) playerY -= movement;
-      if (direction === 3) playerY += movement;
+<script>
+let playerX = 5;
+let playerY = 80;
+let lastDice = 1;
+const step = 5;
+let playerCount = 2;
+let currentPlayer = 1;
+let scores = [];
 
-      // sınır kontrolü
-      if (playerX < 0) playerX = 0;
-      if (playerX > 90) playerX = 90;
-      if (playerY < 10) playerY = 10;
-      if (playerY > 90) playerY = 90;
+const civilizations = [
+  { name: "Hitit", x: 30, y: 30 },
+  { name: "Frig", x: 45, y: 35 },
+  { name: "Lidya", x: 25, y: 50 },
+  { name: "Urartu", x: 70, y: 25 },
+  { name: "Asur", x: 85, y: 70 },
+  { name: "İyon", x: 20, y: 65 },
+  { name: "Mısır", x: 10, y: 90 },
+  { name: "Kıbrıs", x: 40, y: 85 },
+  { name: "Fenike", x: 5, y: 75 }
+];
 
-      const token = document.getElementById('playerToken');
-      token.style.left = playerX + '%';
-      token.style.top = playerY + '%';
-    }
+function drawCivilizations() {
+  const mapArea = document.getElementById('mapArea');
+  civilizations.forEach(civ => {
+    const label = document.createElement('div');
+    label.className = 'civilization-label';
+    label.style.left = civ.x + '%';
+    label.style.top = civ.y + '%';
+    label.innerText = civ.name;
+    mapArea.appendChild(label);
+  });
+}
 
-    // otomatik test için çalıştır
-    movePlayer();
-  </script>
+function startGame() {
+  playerCount = parseInt(document.getElementById('playerCount').value);
+  scores = Array(playerCount).fill(0);
+  currentPlayer = 1;
+  playerX = 5;
+  playerY = 80;
+  const token = document.getElementById('playerToken');
+  token.style.left = playerX + '%';
+  token.style.top = playerY + '%';
+  drawCivilizations();
+}
+
+function rollDice() {
+  lastDice = Math.floor(Math.random() * 6) + 1;
+  document.getElementById('diceResult').innerText = `Zar: ${lastDice}`;
+}
+
+function movePlayer() {
+  const direction = Math.floor(Math.random() * 4);
+  const movement = step * lastDice;
+  if (direction === 0) playerX += movement;
+  if (direction === 1) playerX -= movement;
+  if (direction === 2) playerY -= movement;
+  if (direction === 3) playerY += movement;
+  if (playerX < 0) playerX = 0;
+  if (playerX > 90) playerX = 90;
+  if (playerY < 0) playerY = 0;
+  if (playerY > 90) playerY = 90;
+  const token = document.getElementById('playerToken');
+  token.style.left = playerX + '%';
+  token.style.top = playerY + '%';
+}
+</script>
+
 </body>
 </html>
