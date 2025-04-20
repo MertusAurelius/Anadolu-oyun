@@ -25,17 +25,58 @@
       border: 2px solid #444;
       padding: 20px;
       margin-top: 20px;
-      background-color: #fff8dc;
       display: inline-block;
+      position: relative;
     }
-    #score {
+    .tooltip {
+      visibility: hidden;
+      background-color: #333;
+      color: #fff;
+      text-align: left;
+      border-radius: 6px;
+      padding: 8px;
+      position: absolute;
+      z-index: 1;
+      bottom: 120%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200px;
+      font-size: 12px;
+    }
+    .card:hover .tooltip {
+      visibility: visible;
+    }
+    .kaynak { background-color: #fff8dc; }
+    .gelişim { background-color: #cce5ff; }
+    .olay { background-color: #f8d7da; }
+    #score, #playerTurn {
       font-size: 22px;
       font-weight: bold;
-      margin: 20px;
+      margin: 10px;
       color: darkgreen;
+    }
+    #victoryMessage {
+      display: none;
+      font-size: 24px;
+      color: darkblue;
+      background-color: #d4edda;
+      border: 2px solid #155724;
+      padding: 20px;
+      margin-top: 20px;
     }
     #mapArea {
       margin-top: 30px;
+      position: relative;
+      display: inline-block;
+    }
+    .city {
+      position: absolute;
+      padding: 6px 8px;
+      background-color: rgba(255,255,255,0.85);
+      border: 1px solid #555;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
     }
     .hex-tile {
       display: inline-block;
@@ -55,24 +96,25 @@
   </style>
 </head>
 <body>
-
   <div id="main">
     <h1>Anadolu Uygarlıkları</h1>
     <p>Eğitici Tur Bazlı Web Oyunu</p>
+    <label>Oyuncu Sayısı: <input type="number" id="playerCount" min="2" max="4" value="2"></label>
     <button onclick="startGame()">Oyuna Başla</button>
   </div>
-
   <div id="gameScreen">
-    <h2>Tur: <span id="turn">1</span></h2>
-    <div id="score">Puan: 0</div>
+    <h2>Tur: <span id="turn">1</span> | <span id="playerTurn">Oyuncu 1</span></h2>
+    <div id="score"></div>
     <button onclick="rollDice()">🎲 Zar At</button>
     <button onclick="drawCard()">🃏 Kart Çek</button>
-
     <div id="diceResult"></div>
     <div id="cardArea"></div>
-
+    <div id="victoryMessage">🎉 Tebrikler! Oyunu kazandınız. Tunç Çağı'ndan çıktınız! 🎉</div>
     <div id="mapArea">
       <img id="mapImage" src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Anatolia_ancient_regions_-_english.svg/1200px-Anatolia_ancient_regions_-_english.svg.png" alt="Harita">
+      <div class="city" style="top: 40%; left: 20%;" onclick="cityEvent('Hattuşaş')">🏛 Hattuşaş</div>
+      <div class="city" style="top: 50%; left: 45%;" onclick="cityEvent('Sardes')">🏛 Sardes</div>
+      <div class="city" style="top: 60%; left: 70%;" onclick="cityEvent('Tarsus')">🏛 Tarsus</div>
       <div class="hex-tile">🌾</div>
       <div class="hex-tile">🪙</div>
       <div class="hex-tile">🪨</div>
@@ -80,39 +122,54 @@
       <div class="hex-tile">⚔️</div>
     </div>
   </div>
-
   <script>
     let turn = 1;
-    let score = 0;
+    let currentPlayer = 1;
+    let playerCount = 2;
+    let scores = [];
+    const winThreshold = 10;
     const cards = [
-      { text: '🌾 Buğday: Tarım yap, +1 puan!', points: 1 },
-      { text: '🪙 Altın: Ticaret yap, +2 puan!', points: 2 },
-      { text: '🪨 Kalay: Tunç üretimi için sakla!', points: 1 },
-      { text: '⚔️ Savaş: 1 tur bekle!', points: 0 },
-      { text: '📜 Yazının İcadı: Gelişim kartı +1!', points: 2 },
-      { text: '🚨 Deprem: -1 kaynak', points: -1 },
-      { text: '🎪 Tüccar geldi: İstediğin kaynağı al!', points: 1 }
+      { text: '🌾 Buğday: Tarım yap, +1 puan!', points: 1, info: 'Buğday, Mezopotamya ve Anadolu’da tarım devriminin temel ürünüdür.', type: 'kaynak' },
+      { text: '🪙 Altın: Ticaret yap, +2 puan!', points: 2, info: 'Altın, Lidyalılar zamanında ilk para birimi olarak kullanılmıştır.', type: 'kaynak' },
+      { text: '🪨 Kalay: Tunç üretimi için sakla!', points: 1, info: 'Kalay ve bakır birleştirilerek Tunç yapılır, Tunç Çağı’na adını verir.', type: 'kaynak' },
+      { text: '⚔️ Savaş: 1 tur bekle!', points: 0, info: 'Antik çağlarda savaşlar kaynak kaybı ve gelişim durması anlamına gelirdi.', type: 'olay' },
+      { text: '📜 Yazının İcadı: Gelişim kartı +1!', points: 2, info: 'Yazı ilk kez Sümerler tarafından kullanılmış, sonra Anadolu’ya yayılmıştır.', type: 'gelişim' },
+      { text: '🚨 Deprem: -1 kaynak', points: -1, info: 'Depremler antik şehirlerin yıkılmasına neden olmuştur. Örn: Troya.', type: 'olay' },
+      { text: '🎪 Tüccar geldi: İstediğin kaynağı al!', points: 1, info: 'Ticaret kervanları Asur Kolonileri döneminde Anadolu’da aktiftir.', type: 'olay' }
     ];
-
     function startGame() {
+      playerCount = parseInt(document.getElementById('playerCount').value);
+      scores = Array(playerCount).fill(0);
+      updateScoreDisplay();
       document.getElementById('main').style.display = 'none';
       document.getElementById('gameScreen').style.display = 'block';
     }
-
     function rollDice() {
       const dice = Math.floor(Math.random() * 6) + 1;
       document.getElementById('diceResult').innerText = `Zar Sonucu: ${dice}`;
-      turn++;
-      document.getElementById('turn').innerText = turn;
     }
-
     function drawCard() {
       const randomCard = cards[Math.floor(Math.random() * cards.length)];
-      document.getElementById('cardArea').innerHTML = `<div class='card'>${randomCard.text}</div>`;
-      score += randomCard.points;
-      document.getElementById('score').innerText = `Puan: ${score}`;
+      const cardClass = `card ${randomCard.type}`;
+      document.getElementById('cardArea').innerHTML = `<div class='${cardClass}'>${randomCard.text}<div class='tooltip'>${randomCard.info}</div></div>`;
+      scores[currentPlayer - 1] += randomCard.points;
+      updateScoreDisplay();
+      if (scores[currentPlayer - 1] >= winThreshold) {
+        document.getElementById('victoryMessage').style.display = 'block';
+      } else {
+        currentPlayer = (currentPlayer % playerCount) + 1;
+        turn++;
+        document.getElementById('turn').innerText = turn;
+        document.getElementById('playerTurn').innerText = `Oyuncu ${currentPlayer}`;
+      }
+    }
+    function updateScoreDisplay() {
+      const scoreBoard = scores.map((s, i) => `Oyuncu ${i + 1}: ${s} puan`).join(' | ');
+      document.getElementById('score').innerText = scoreBoard;
+    }
+    function cityEvent(cityName) {
+      alert(`📍 ${cityName} şehrine ulaştınız! Bu şehirle ilgili özel bir kart kazanabilirsiniz.`);
     }
   </script>
-
 </body>
 </html>
