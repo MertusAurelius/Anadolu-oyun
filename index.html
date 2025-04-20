@@ -28,6 +28,30 @@
       background-color: #fff8dc;
       display: inline-block;
     }
+    #score {
+      font-size: 22px;
+      font-weight: bold;
+      margin: 20px;
+      color: darkgreen;
+    }
+    #mapArea {
+      margin-top: 30px;
+    }
+    .hex-tile {
+      display: inline-block;
+      width: 100px;
+      height: 100px;
+      background-color: #e0cfa9;
+      clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+      margin: 5px;
+      line-height: 100px;
+      font-size: 24px;
+    }
+    #mapImage {
+      margin-top: 20px;
+      max-width: 90%;
+      border: 3px solid #444;
+    }
   </style>
 </head>
 <body>
@@ -40,23 +64,34 @@
 
   <div id="gameScreen">
     <h2>Tur: <span id="turn">1</span></h2>
+    <div id="score">Puan: 0</div>
     <button onclick="rollDice()">🎲 Zar At</button>
     <button onclick="drawCard()">🃏 Kart Çek</button>
 
     <div id="diceResult"></div>
     <div id="cardArea"></div>
+
+    <div id="mapArea">
+      <img id="mapImage" src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Anatolia_ancient_regions_-_english.svg/1200px-Anatolia_ancient_regions_-_english.svg.png" alt="Harita">
+      <div class="hex-tile">🌾</div>
+      <div class="hex-tile">🪙</div>
+      <div class="hex-tile">🪨</div>
+      <div class="hex-tile">📜</div>
+      <div class="hex-tile">⚔️</div>
+    </div>
   </div>
 
   <script>
     let turn = 1;
+    let score = 0;
     const cards = [
-      '🌾 Buğday: Tarım yap, +1 puan!',
-      '🪙 Altın: Ticaret yap, +2 puan!',
-      '🪨 Kalay: Tunç üretimi için sakla!',
-      '⚔️ Savaş: 1 tur bekle!',
-      '📜 Yazının İcadı: Gelişim kartı +1!',
-      '🚨 Deprem: -1 kaynak',
-      '🎪 Tüccar geldi: İstediğin kaynağı al!'
+      { text: '🌾 Buğday: Tarım yap, +1 puan!', points: 1 },
+      { text: '🪙 Altın: Ticaret yap, +2 puan!', points: 2 },
+      { text: '🪨 Kalay: Tunç üretimi için sakla!', points: 1 },
+      { text: '⚔️ Savaş: 1 tur bekle!', points: 0 },
+      { text: '📜 Yazının İcadı: Gelişim kartı +1!', points: 2 },
+      { text: '🚨 Deprem: -1 kaynak', points: -1 },
+      { text: '🎪 Tüccar geldi: İstediğin kaynağı al!', points: 1 }
     ];
 
     function startGame() {
@@ -73,7 +108,9 @@
 
     function drawCard() {
       const randomCard = cards[Math.floor(Math.random() * cards.length)];
-      document.getElementById('cardArea').innerHTML = `<div class='card'>${randomCard}</div>`;
+      document.getElementById('cardArea').innerHTML = `<div class='card'>${randomCard.text}</div>`;
+      score += randomCard.points;
+      document.getElementById('score').innerText = `Puan: ${score}`;
     }
   </script>
 
