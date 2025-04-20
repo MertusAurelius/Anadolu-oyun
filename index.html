@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anadolu Uygarlıkları Oyunu</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f5f5dc;
+    }
+    #main {
+      padding: 50px;
+    }
+    button {
+      font-size: 20px;
+      padding: 10px 20px;
+      margin: 10px;
+    }
+    #gameScreen {
+      display: none;
+    }
+    .card {
+      border: 2px solid #444;
+      padding: 20px;
+      margin-top: 20px;
+      background-color: #fff8dc;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="main">
+    <h1>Anadolu Uygarlıkları</h1>
+    <p>Eğitici Tur Bazlı Web Oyunu</p>
+    <button onclick="startGame()">Oyuna Başla</button>
+  </div>
+
+  <div id="gameScreen">
+    <h2>Tur: <span id="turn">1</span></h2>
+    <button onclick="rollDice()">🎲 Zar At</button>
+    <button onclick="drawCard()">🃏 Kart Çek</button>
+
+    <div id="diceResult"></div>
+    <div id="cardArea"></div>
+  </div>
+
+  <script>
+    let turn = 1;
+    const cards = [
+      '🌾 Buğday: Tarım yap, +1 puan!',
+      '🪙 Altın: Ticaret yap, +2 puan!',
+      '🪨 Kalay: Tunç üretimi için sakla!',
+      '⚔️ Savaş: 1 tur bekle!',
+      '📜 Yazının İcadı: Gelişim kartı +1!',
+      '🚨 Deprem: -1 kaynak',
+      '🎪 Tüccar geldi: İstediğin kaynağı al!'
+    ];
+
+    function startGame() {
+      document.getElementById('main').style.display = 'none';
+      document.getElementById('gameScreen').style.display = 'block';
+    }
+
+    function rollDice() {
+      const dice = Math.floor(Math.random() * 6) + 1;
+      document.getElementById('diceResult').innerText = `Zar Sonucu: ${dice}`;
+      turn++;
+      document.getElementById('turn').innerText = turn;
+    }
+
+    function drawCard() {
+      const randomCard = cards[Math.floor(Math.random() * cards.length)];
+      document.getElementById('cardArea').innerHTML = `<div class='card'>${randomCard}</div>`;
+    }
+  </script>
+
+</body>
+</html>
